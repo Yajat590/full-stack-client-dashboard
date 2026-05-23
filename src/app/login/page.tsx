@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { Loader2, Waves } from "lucide-react";
+import { Loader2, Waves, Zap } from "lucide-react";
 import { toast } from "sonner";
 
 export default function LoginPage() {
@@ -16,6 +16,26 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: "demo@clienthub.com",
+      password: "Demo1234!",
+    });
+
+    if (error) {
+      toast.error("Demo login failed. Please try again.");
+      setDemoLoading(false);
+      return;
+    }
+
+    toast.success("Welcome to the demo!");
+    router.push("/dashboard");
+    router.refresh();
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +109,25 @@ export default function LoginPage() {
             >
               {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
               Sign in
+            </Button>
+            <div className="relative w-full flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200" />
+              <span className="text-xs text-gray-400 font-medium">or</span>
+              <div className="flex-1 h-px bg-gray-200" />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full h-11 font-medium border-primary/30 text-primary hover:bg-primary/5 hover:border-primary/60 transition-all"
+              onClick={handleDemoLogin}
+              disabled={demoLoading || loading}
+            >
+              {demoLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Zap className="w-4 h-4 mr-2 fill-primary" />
+              )}
+              Try Demo — no sign up needed
             </Button>
             <div className="text-center text-sm text-gray-500">
               Don't have an account?{" "}
