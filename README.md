@@ -6,14 +6,6 @@ A high-fidelity B2B SaaS client portal built for content writing agencies. Clien
 
 ---
 
-## Screenshots
-
-> Dashboard · Kanban Board · Inbox · Task Detail
-
-*(Add screenshots here)*
-
----
-
 ## Features
 
 - **Dashboard** — High-level analytics, interactive area chart, and a live "Recent tasks" table showing the five most immediately due items
