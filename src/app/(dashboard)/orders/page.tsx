@@ -88,7 +88,7 @@ export default function KanbanBoardPage() {
                     <div className="flex items-center gap-2 mb-3">
                       <span className="flex items-center gap-1.5 text-xs font-bold text-primary bg-primary/5 px-2.5 py-1 rounded-md">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        In Research
+                        {order.type}
                       </span>
                       <span className={cn(
                         "flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md border",

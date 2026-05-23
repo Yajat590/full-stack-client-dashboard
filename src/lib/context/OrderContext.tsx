@@ -49,9 +49,40 @@ interface OrderContextType {
   inReviewCount: number;
   completedCount: number;
   totalWordsDelivered: number;
+  avgTurnaroundDays: number;
 }
 
 const OrderContext = createContext<OrderContextType | undefined>(undefined);
+
+function generateActivities(orders: Order[]): Activity[] {
+  return [...orders]
+    .sort((a, b) => b.deadline.getTime() - a.deadline.getTime())
+    .slice(0, 8)
+    .map((o, i) => {
+      if (o.status === "Completed") {
+        return {
+          id: `act-${o.id}`,
+          message: `Task '${o.title}' was marked as complete.`,
+          timestamp: new Date(o.deadline.getTime() - i * 3600000),
+          statusColor: "bg-emerald-400",
+        };
+      } else if (o.status === "Pending Review") {
+        return {
+          id: `act-${o.id}`,
+          message: `Task '${o.title}' was submitted for review.`,
+          timestamp: new Date(Date.now() - i * 7200000),
+          statusColor: "bg-orange-400",
+        };
+      } else {
+        return {
+          id: `act-${o.id}`,
+          message: `Task '${o.title}' is currently in progress.`,
+          timestamp: new Date(Date.now() - i * 14400000),
+          statusColor: "bg-purple-400",
+        };
+      }
+    });
+}
 
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -70,7 +101,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
          if (orderError) throw orderError;
          
          if (orderData && orderData.length > 0) {
-           setOrders(orderData.map(o => ({
+           const mapped = orderData.map(o => ({
               id: o.id,
               title: o.title,
               subtitle: o.subtitle,
@@ -80,12 +111,16 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
               status: o.status as OrderStatus,
               priority: o.priority as Priority,
               deadline: new Date(o.deadline),
+              createdAt: o.created_at ? new Date(o.created_at) : undefined,
               avatars: o.avatars || [],
               attachmentsCount: o.attachments_count || 0,
               commentsCount: o.comments_count || 0
-           })));
+           }));
+           setOrders(mapped);
+           setActivities(generateActivities(mapped));
          } else {
             setOrders(mockOrders);
+            setActivities(generateActivities(mockOrders));
          }
 
          if (notifData && notifData.length > 0) {
@@ -106,6 +141,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
        } catch (err: any) {
          console.warn("Supabase fetch failed. Falling back to mock data.", err.message);
          setOrders(mockOrders);
+         setActivities(generateActivities(mockOrders));
          setNotifications([
             { id: "n0", message: "Payment processed: $2,450.00 via Stripe ending in •••• 4242", read: false, createdAt: new Date() },
             { id: "n1", message: "Task 'Travel planner website design' moved to Completed.", read: false, createdAt: new Date(Date.now() - 1800000) },
@@ -215,7 +251,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
   const activeOrdersCount = orders.filter((o) => o.status === "In Progress").length;
   const inReviewCount = orders.filter((o) => o.status === "Pending Review").length;
   const completedCount = orders.filter((o) => o.status === "Completed").length;
-  
+
   const totalWordsDelivered = orders
     .filter((o) => o.status === "Completed")
     .reduce((acc, order) => {
@@ -223,6 +259,14 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       const val = numMatch ? parseInt(numMatch[0]) : 0;
       return acc + val;
     }, 0);
+
+  const completedWithDates = orders.filter(o => o.status === "Completed" && o.createdAt);
+  const avgTurnaroundDays = completedWithDates.length > 0
+    ? completedWithDates.reduce((acc, o) => {
+        const days = Math.abs(o.deadline.getTime() - o.createdAt!.getTime()) / (1000 * 60 * 60 * 24);
+        return acc + days;
+      }, 0) / completedWithDates.length
+    : 0;
 
   return (
     <OrderContext.Provider
@@ -237,6 +281,7 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
         inReviewCount,
         completedCount,
         totalWordsDelivered,
+        avgTurnaroundDays,
       }}
     >
       {children}
@@ -294,6 +339,7 @@ const mockOrders: Order[] = [
         attachmentsCount: 3,
         commentsCount: 12,
         deadline: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       },
       {
         id: "4",
@@ -308,6 +354,7 @@ const mockOrders: Order[] = [
         attachmentsCount: 2,
         commentsCount: 5,
         deadline: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000),
       },
       {
         id: "5",
@@ -322,6 +369,7 @@ const mockOrders: Order[] = [
         attachmentsCount: 1,
         commentsCount: 8,
         deadline: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000),
       },
       {
         id: "6",
@@ -350,6 +398,7 @@ const mockOrders: Order[] = [
         attachmentsCount: 0,
         commentsCount: 2,
         deadline: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+        createdAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
       }
 ];
 

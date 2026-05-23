@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CopyPlus, Clock, CheckCircle2, TrendingUp } from "lucide-react";
+import { CopyPlus, Clock, CheckCircle2, TrendingUp, Timer } from "lucide-react";
 import Link from "next/link";
 import { useOrders } from "@/lib/context/OrderContext";
 import { CompletionChart } from "@/components/dashboard/completion-chart";
@@ -24,7 +24,7 @@ function timeAgo(date: Date) {
 }
 
 export default function DashboardPage() {
-  const { activeOrdersCount, inReviewCount, completedCount, totalWordsDelivered, activities, orders } = useOrders();
+  const { activeOrdersCount, inReviewCount, completedCount, totalWordsDelivered, activities, orders, avgTurnaroundDays } = useOrders();
 
   // Pick up to 5 upcoming deadlines
   const upcomingDeadlines = [...orders]
@@ -93,11 +93,13 @@ export default function DashboardPage() {
          <Card className="rounded-[20px] shadow-[0_2px_10px_rgba(0,0,0,0.02)] border-gray-100">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-gray-500">Avg. turnaround</CardTitle>
-            <Clock className="w-4 h-4 text-purple-500" />
+            <Timer className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">2.4 Days</div>
-            <p className="text-xs text-gray-500 mt-1">12% faster than average</p>
+            <div className="text-2xl font-bold text-gray-900">
+              {avgTurnaroundDays > 0 ? `${avgTurnaroundDays.toFixed(1)} Days` : "—"}
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Across {completedCount} completed orders</p>
           </CardContent>
         </Card>
       </div>
